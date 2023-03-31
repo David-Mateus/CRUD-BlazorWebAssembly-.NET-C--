@@ -1,0 +1,66 @@
+﻿@page "/"
+
+@using ToDoCrudBlazor.Models
+@inject IJSRuntime JSRuntime
+@inject ToDoCrudBlazor.Services.ICompanyService CompanyService;
+
+<PageTitle>Tarefas</PageTitle>
+
+<h1>Vendas</h1>
+
+<a href="/create" class="btn btn-success ">Criar</a>
+<table class="table table-responsive table-striped">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Criado em</th>
+            <th>Criado por</th>
+            <th>Prioridade</th>
+            <th>Vencimento</th>
+            
+        </tr>
+    </thead>
+    <tbody>
+        @if(companies != null && companies.Count > 0)
+        {
+            foreach(var item in companies)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.StartDate</td>
+                    <td>@item.Email</td>
+                    <td>@item.Prioridade</td>
+                    <td>@item.Vencimento</td>
+                    
+                    
+                    <td>
+                        <a href="/update/@item.Id" class="btn btn-warning">Atualizar</a>
+                        <button class="btn btn-danger" @onclick="async () => await DeleteCompany(item.Id)">Deletar</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+@code{
+    List<Company> companies = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        companies = await CompanyService.FindAll();
+    }
+
+    async Task DeleteCompany(Guid id)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Tem certeza que deseja deletar ?");
+        if (confirmed is false)
+            return;
+        var company = await CompanyService.GetBy(id);
+        await CompanyService.Delete(company);
+        companies = await CompanyService.FindAll();
+        StateHasChanged();
+    }
+
+}
+
+
